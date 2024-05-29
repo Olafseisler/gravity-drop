@@ -74,6 +74,9 @@ public class MortarController : MonoBehaviour
         GameObject projectile = Instantiate(projectilePrefab, projectileSpawnPoint.position, projectileSpawnPoint.rotation);
         Rigidbody rb = projectile.GetComponent<Rigidbody>();
         rb.velocity = projectileSpawnPoint.up * muzzleVelocity;
+        audioSource.PlayOneShot(shootSound);
+        var effect = Instantiate(shootEffect, projectileSpawnPoint.position, projectileSpawnPoint.rotation);
+        Destroy(effect, 2f);
     }
 
     void HandleMovement()

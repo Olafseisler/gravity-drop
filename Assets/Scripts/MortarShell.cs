@@ -1,12 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class MortarShell : MonoBehaviour
 {
     public GameObject explosionPrefab;
     public float explosionRadius = 8f;
     public int damage = 10;
+    public static event Action OnHitEnemy;
     
     
     private void OnCollisionEnter(Collision other)
@@ -30,6 +32,7 @@ public class MortarShell : MonoBehaviour
         {
             if (hitCollider.CompareTag("Enemy"))
             {
+                OnHitEnemy?.Invoke();
                 Destroy(hitCollider.gameObject, 0.2f);
             }
         }

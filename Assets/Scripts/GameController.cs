@@ -6,66 +6,39 @@ using UnityEngine;
 public class GameController : MonoBehaviour
 {
     public static GameController instance;
-    public int maxHealth = 100;
-    public int currentHealth;
-    
-
+    public GameObject player;
+    public GameObject rangeTable;
+    public GameObject scoreText;
     public int score = 0;
     
     // Start is called before the first frame update
     void Start()
     {
         instance = this;
-        currentHealth = maxHealth;
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            rangeTable.SetActive(!rangeTable.activeSelf);
+        }
     }
 
     private void OnEnable()
     {
-        Pickup.OnPickup += HandlePickup;
-        Spikes.OnDamage += TakeDamage;
+        MortarShell.OnHitEnemy += AddScore;
     }
     
     private void OnDisable()
     {
-        Pickup.OnPickup -= HandlePickup;
-        Spikes.OnDamage -= TakeDamage;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        MortarShell.OnHitEnemy -= AddScore;
     }
     
-    public void TakeDamage(int damage)
+    private void AddScore()
     {
-        Debug.Log("Player took " + damage + " damage!");
-        currentHealth -= damage;
-        if (currentHealth <= 0)
-        {
-            Die();
-        }
+        score += 1;
+        scoreText.GetComponent<TMPro.TextMeshProUGUI>().text = score.ToString();
     }
     
-    public void Heal(int amount)
-    {
-        Debug.Log("Player healed " + amount + " health!");
-        
-        currentHealth += amount;
-        if (currentHealth > maxHealth)
-        {
-            currentHealth = maxHealth;
-        }
-    }
-    
-    public void Die()
-    {
-        Debug.Log("Player died!");
-    }
-    
-    private void HandlePickup(int scoreValue)
-    {
-        score += scoreValue;
-        Debug.Log("Score: " + score);
-    }
 }

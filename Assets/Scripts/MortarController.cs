@@ -16,12 +16,15 @@ public class MortarController : MonoBehaviour
     public Camera mortarCamera;
     public GameObject projectilePrefab;
     public Transform projectileSpawnPoint;
+    public GameObject shootEffect;
+    public AudioClip shootSound;
     public TMPro.TextMeshProUGUI elevationText;
     public TMPro.TextMeshProUGUI azimuthText;
     public TMPro.TextMeshProUGUI rangeText;
     public float zoomedFOV = 30f;
     public float normalFOV = 60f;
     public float zoomSpeed = 10f;
+    public float returnSpeed = 5f;
 
     private float currentElevationAngle = 45f;
     private bool isZoomed = false;
@@ -31,10 +34,13 @@ public class MortarController : MonoBehaviour
     private float cameraStartingRotationX;
     private float cameraStartingRotationY;
     private float timeToShowRange = 2f;
+    private bool isFreeLookActive = false;
+    private AudioSource audioSource;
 
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
+        audioSource = GetComponent<AudioSource>();
         // Cursor.visible = false;
         cameraStartingRotationX = mortarCamera.transform.localEulerAngles.x;
         cameraStartingRotationY = mortarCamera.transform.localEulerAngles.y;
@@ -97,26 +103,48 @@ public class MortarController : MonoBehaviour
     
     void HandleMouseLook()
     {
+        if (Input.GetMouseButtonDown(0))
+        {
+            // Reset rotations to starting position when free look is activated
+            verticalRotation = 0f;
+            horizontalRotation = 0f;
+            isFreeLookActive = true;
+        }
+        
+        if (Input.GetMouseButtonUp(0))
+        {
+            // Deactivate free look when the left mouse button is released
+            isFreeLookActive = false;
+        }
+
+        // Only allow mouse look when left mouse button is held
+        if (!Input.GetMouseButton(0))
+        {
+            float newRotationX = Mathf.LerpAngle(mortarCamera.transform.localEulerAngles.x, cameraStartingRotationX, Time.deltaTime * returnSpeed);
+            float newRotationY = Mathf.LerpAngle(mortarCamera.transform.localEulerAngles.y, cameraStartingRotationY, Time.deltaTime * returnSpeed);
+            mortarCamera.transform.localEulerAngles = new Vector3(newRotationX, newRotationY, 0);
+            return;
+        }
+
         // Get mouse input
-        float mouseX = Input.GetAxis("Mouse X") * currentMouseSensitivity * Time.deltaTime;
-        float mouseY = Input.GetAxis("Mouse Y") * currentMouseSensitivity * Time.deltaTime;
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 
         // Calculate new vertical rotation
         verticalRotation -= mouseY;
         verticalRotation = Mathf.Clamp(verticalRotation, cameraVerticalLimits.x, cameraVerticalLimits.y);
-        
+
         // Calculate new horizontal rotation
         horizontalRotation += mouseX;
         horizontalRotation = Mathf.Clamp(horizontalRotation, cameraHorizontalLimits.x, cameraHorizontalLimits.y);
-        
+
         // Apply the new rotation to the camera
         mortarCamera.transform.localEulerAngles = new Vector3(verticalRotation + cameraStartingRotationX, horizontalRotation + cameraStartingRotationY, 0);
-        
     }
 
     void HandleZoom()
     {
-        if (Input.GetMouseButton(0)) // Left mouse button
+        if (Input.GetMouseButton(1))
         {
             isZoomed = true;
             currentMouseSensitivity = mouseSensitivity / 2;

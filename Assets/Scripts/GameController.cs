@@ -13,6 +13,12 @@ public class GameController : MonoBehaviour
     public GameObject enemyPrefab;
     public Vector2 enemySpawnRangeLimits = new Vector2(150, 500);
     public int score = 0;
+    public float timeBeforeEnemyRespawn = 120f;
+    private float enemyTimer;
+    private float messageTimer;
+    private bool showingMessage = false;
+    private Vector3 enemyPosition;
+    
 
     // Start is called before the first frame update
     void Start()
@@ -23,6 +29,7 @@ public class GameController : MonoBehaviour
         if (enemy == null)
         {
             SpawnEnemy();
+            ShowEnemyInfoText(GameObject.FindGameObjectWithTag("Enemy").transform.position);
         }
         else
         {
@@ -35,6 +42,30 @@ public class GameController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Q))
         {
             rangeTable.SetActive(!rangeTable.activeSelf);
+        }
+        
+        enemyTimer += Time.deltaTime;
+        if (enemyTimer >= timeBeforeEnemyRespawn)
+        {
+            // Destroy the enemy if it exists
+            var enemy = GameObject.FindGameObjectWithTag("Enemy");
+            if (enemy != null)
+            {
+                Destroy(enemy);
+            }
+            SpawnEnemy();
+            enemyTimer = 0;
+        }
+        
+        if (showingMessage)
+        {
+            messageTimer += Time.deltaTime;
+            if (messageTimer >= 4f)
+            {
+                showingMessage = false;
+                messageTimer = 0;
+                ShowEnemyInfoText(GameObject.FindGameObjectWithTag("Enemy").transform.position);
+            }
         }
     }
 
@@ -51,6 +82,8 @@ public class GameController : MonoBehaviour
     private void AddScore()
     {
         score += 1;
+        enemyInfoText.text = "Enemy destroyed!";
+        showingMessage = true;
         scoreText.GetComponent<TMPro.TextMeshProUGUI>().text = score.ToString();
         SpawnEnemy();
     }
@@ -68,7 +101,6 @@ public class GameController : MonoBehaviour
             spawnPosition = hit.point + new Vector3(0, 2f, 0);
         } 
         Instantiate(enemyPrefab, spawnPosition, Quaternion.identity);
-        ShowEnemyInfoText(spawnPosition);
     }
 
     private void ShowEnemyInfoText(Vector3 spawnPosition)

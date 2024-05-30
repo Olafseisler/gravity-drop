@@ -44,6 +44,7 @@ public class MortarController : MonoBehaviour
         // Cursor.visible = false;
         cameraStartingRotationX = mortarCamera.transform.localEulerAngles.x;
         cameraStartingRotationY = mortarCamera.transform.localEulerAngles.y;
+        currentElevationAngle = barrel.localEulerAngles.z;
     }
 
     void Update()
@@ -82,26 +83,36 @@ public class MortarController : MonoBehaviour
     void HandleMovement()
     {
         float horizontal = Input.GetAxis("Horizontal"); 
-        float vertical = Input.GetAxis("Vertical"); 
+        float vertical = Input.GetAxis("Vertical");
 
         // Rotate the mortar for azimuth
-        transform.Rotate(0, horizontal * rotationSpeed * Time.deltaTime, 0);
-
+        transform.Rotate(transform.rotation.x, horizontal * rotationSpeed * Time.deltaTime, transform.rotation.z);
+        
         // Calculate the new elevation angle
         currentElevationAngle -= vertical * elevationSpeed * Time.deltaTime;
         currentElevationAngle = Mathf.Clamp(currentElevationAngle, minElevationAngle, maxElevationAngle);
-        
         // Rotate the barrel for elevation
-        barrel.localEulerAngles = new Vector3(0, 0, currentElevationAngle);
+        barrel.localEulerAngles = new Vector3(barrel.localEulerAngles.x, barrel.localEulerAngles.y, currentElevationAngle);
         
+
         // Calculate the azimuth value in mils
-        float azimuthMils = Mathf.Round((transform.eulerAngles.y) * 17.777777777777778f); // Must be in the range 0-6400
+        float azimuthMils = Mathf.Round(Mathf.Abs(transform.eulerAngles.y) * 6400 / 360);
         if (azimuthMils < 0)
         {
             azimuthMils += 6400;
         }
         azimuthText.text = azimuthMils.ToString();
-        elevationText.text = Mathf.Round((90f-currentElevationAngle) * 17.777777777777778f).ToString();
+        float barrelElevationDegrees = Mathf.Abs(barrel.localEulerAngles.z);
+        // Get in range -90 to 90
+        if (barrelElevationDegrees > 180)
+        {
+            barrelElevationDegrees = 360 - barrelElevationDegrees;
+        }
+
+        float elevationMils = Mathf.Round(barrelElevationDegrees * 17.777778f);
+        elevationText.text = Mathf.Round(1600 - elevationMils).ToString();
+        azimuthText.outlineWidth = 0.2f;
+        elevationText.outlineWidth = 0.2f;
     }
     
     void HandleMouseLook()
